@@ -30,6 +30,7 @@ import java.util.LinkedHashMap
  * Implementation of a remote data source with static access to the data for easy testing.
  */
 class FakeTestRepository : TasksRepository {
+    private var shouldReturnError = false
 
     var tasksServiceData: LinkedHashMap<String, Task> = LinkedHashMap()
 
@@ -65,6 +66,9 @@ class FakeTestRepository : TasksRepository {
     }
 
     override suspend fun getTask(taskId: String, forceUpdate: Boolean): Result<Task> {
+        if (shouldReturnError) {
+            return Error(Exception("Test exception"))
+        }
         tasksServiceData[taskId]?.let {
             return Success(it)
         }
@@ -72,6 +76,9 @@ class FakeTestRepository : TasksRepository {
     }
 
     override suspend fun getTasks(forceUpdate: Boolean): Result<List<Task>> {
+        if (shouldReturnError) {
+            return Error(Exception("Test exception"))
+        }
         return Success(tasksServiceData.values.toList())
     }
 
@@ -121,5 +128,9 @@ class FakeTestRepository : TasksRepository {
             tasksServiceData[task.id] = task
         }
         runBlocking { refreshTasks() }
+    }
+
+    fun setReturnError(value: Boolean) {
+        shouldReturnError = value
     }
 }
